@@ -1,0 +1,25 @@
+name: Delete Feature Branches
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  delete_feature_branches:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Delete merged feature branches
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Utilisation du jeton généré automatiquement
+        run: |
+          git fetch --prune
+          for branch in $(git branch -r --merged origin/develop | grep 'origin/feature/' | sed 's/origin\///'); do
+            if [ "$branch" != "develop" ]; then
+              echo "Deleting branch $branch"
+              git push origin --delete $branch
+            fi
+          done
