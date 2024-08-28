@@ -1,0 +1,30 @@
+name: Delete Feature Branches
+
+on:
+  push:
+    branches:
+      - main # Déclenchement lorsque des changements sont poussés sur 'main'
+      - develop # Déclenchement lorsque des changements sont poussés sur 'develop'
+  workflow_dispatch: # Permet de déclencher le workflow manuellement
+
+jobs:
+  delete_feature_branches:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Delete merged feature branches
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git fetch --prune
+          echo "Branches merged into develop:"
+          # Supprimer uniquement les branches 'feature/*' fusionnées dans 'develop'
+          for branch in $(git branch -r --merged origin/develop | grep 'origin/feature/' | sed 's/origin\///'); do
+            echo "Deleting branch $branch"
+            git push origin --delete $branch
+          done
+
+          # Ne pas supprimer la branche 'develop' après sa fusion dans 'main'
+          echo "Skipping deletion of 'develop' branch after merge into 'main'"
